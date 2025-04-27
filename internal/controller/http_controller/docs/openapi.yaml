@@ -1,0 +1,144 @@
+openapi: 3.0.2
+info:
+  title: Node Service API
+  version: 1.0.0
+  description: API для управления узлами (Nodes) в системе.
+
+security:
+  - ApiKeyAuth: []
+
+paths:
+  /node:
+    post:
+      summary: Регистрация нового узла
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NewNodeReq"
+      responses:
+        "200":
+          description: Узел успешно зарегистрирован.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Node"
+        "400":
+          $ref: "#/components/responses/400"
+        "403":
+          $ref: "#/components/responses/403"
+        "500":
+          $ref: "#/components/responses/500"
+
+    get:
+      summary: Получение актуального списка узлов
+      responses:
+        "200":
+          description: Список узлов успешно получен.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Node"
+        "400":
+          $ref: "#/components/responses/400"
+        "403":
+          $ref: "#/components/responses/403"
+        "500":
+          $ref: "#/components/responses/500"
+
+  /node/{node_id}:
+    delete:
+      summary: Дерегистрация узла
+      parameters:
+        - name: node_id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Уникальный идентификатор узла.
+      responses:
+        "200":
+          description: Узел успешно удален.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Node"
+        "400":
+          $ref: "#/components/responses/400"
+        "403":
+          $ref: "#/components/responses/403"
+        "500":
+          $ref: "#/components/responses/500"
+
+components:
+  schemas:
+    NewNodeReq:
+      type: object
+      required:
+        - Name
+        - HealthEndpoint
+        - UpdEndpoint
+      properties:
+        Name:
+          type: string
+          description: Имя узла.
+        HealthEndpoint:
+          type: string
+          description: URL для проверки состояния здоровья узла.
+          minLength: 1
+        UpdEndpoint:
+          type: string
+          minLength: 1
+          description: URL для отсылки узлу обновлений состояния кластера.
+    Node:
+      type: object
+      required:
+        - ID
+        - Name
+        - IpAddr
+        - State
+      properties:
+        ID:
+          type: string
+          description: Уникальный идентификатор узла.
+        Name:
+          type: string
+          description: Имя узла.
+        IpAddr:
+          type: string
+          format: ipv4
+          description: IP-адрес узла.
+        State:
+          type: string
+          enum: [down, wfr, up]
+          description: Состояние узла.
+
+    ErrorResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Сообщение об ошибке.
+
+  responses:
+    400:
+      description: Некорректные данные в запросе.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    403:
+      description: Отказано в доступе.
+    500:
+      description: Внутренняя ошибка сервера.
+
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
