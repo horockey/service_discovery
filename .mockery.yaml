@@ -1,0 +1,11 @@
+with-expecter: true
+resolve-type-alias: false
+issue-845-fix: true
+packages:
+  github.com/horockey/service_discovery/internal/repository/nodes:
+    interfaces:
+      Repository:
+        config:
+          dir: "{{.InterfaceDir}}/mock_nodes"
+          filename: repo.go
+          outpkg: mock_nodes

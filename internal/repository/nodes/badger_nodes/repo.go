@@ -34,7 +34,7 @@ func New(
 	}
 }
 
-func (repo *badgerNodes) GetAll() ([]model.Node, error) {
+func (repo *badgerNodes) GetAll(_ context.Context) ([]model.Node, error) {
 	res := []model.Node{}
 
 	err := repo.db.View(func(txn *badger.Txn) error {
@@ -62,7 +62,7 @@ func (repo *badgerNodes) GetAll() ([]model.Node, error) {
 	return res, nil
 }
 
-func (repo *badgerNodes) Get(id string) (model.Node, error) {
+func (repo *badgerNodes) Get(_ context.Context, id string) (model.Node, error) {
 	n := model.Node{}
 	err := repo.db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get([]byte(id))
@@ -85,7 +85,7 @@ func (repo *badgerNodes) Get(id string) (model.Node, error) {
 	return n, nil
 }
 
-func (repo *badgerNodes) AddOrUpdate(n model.Node) error {
+func (repo *badgerNodes) AddOrUpdate(_ context.Context, n model.Node) error {
 	err := repo.db.Update(func(txn *badger.Txn) error {
 		data, err := json.Marshal(n)
 		if err != nil {
@@ -116,7 +116,7 @@ func (repo *badgerNodes) AddOrUpdate(n model.Node) error {
 			case errors.Is(ctx.Err(), context.Canceled):
 				return
 			case errors.Is(ctx.Err(), context.DeadlineExceeded):
-				_ = repo.Remove(id)
+				_ = repo.Remove(nil, id)
 			}
 		}(n.ID)
 	case model.StateUp:
@@ -134,7 +134,7 @@ func (repo *badgerNodes) AddOrUpdate(n model.Node) error {
 	return nil
 }
 
-func (repo *badgerNodes) Remove(id string) error {
+func (repo *badgerNodes) Remove(_ context.Context, id string) error {
 	err := repo.db.Update(func(txn *badger.Txn) error {
 		if err := txn.Delete([]byte(id)); err != nil {
 			return fmt.Errorf("removing kvp: %w", err)

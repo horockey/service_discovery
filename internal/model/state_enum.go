@@ -14,29 +14,25 @@ import (
 const (
 	// StateDown is a State of type Down.
 	StateDown State = iota
-	// StateWfr is a State of type Wfr.
-	StateWfr
 	// StateUp is a State of type Up.
 	StateUp
 )
 
 var ErrInvalidState = errors.New("not a valid State")
 
-const _StateName = "downwfrup"
+const _StateName = "downup"
 
 // StateValues returns a list of the values for State
 func StateValues() []State {
 	return []State{
 		StateDown,
-		StateWfr,
 		StateUp,
 	}
 }
 
 var _StateMap = map[State]string{
 	StateDown: _StateName[0:4],
-	StateWfr:  _StateName[4:7],
-	StateUp:   _StateName[7:9],
+	StateUp:   _StateName[4:6],
 }
 
 // String implements the Stringer interface.
@@ -56,8 +52,7 @@ func (x State) IsValid() bool {
 
 var _StateValue = map[string]State{
 	_StateName[0:4]: StateDown,
-	_StateName[4:7]: StateWfr,
-	_StateName[7:9]: StateUp,
+	_StateName[4:6]: StateUp,
 }
 
 // ParseState attempts to convert a string to a State.

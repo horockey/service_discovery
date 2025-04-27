@@ -1,10 +1,14 @@
 package nodes
 
-import "github.com/horockey/service_discovery/internal/model"
+import (
+	"context"
+
+	"github.com/horockey/service_discovery/internal/model"
+)
 
 type Repository interface {
-	GetAll() ([]model.Node, error)
-	Get(id string) (model.Node, error)
-	AddOrUpdate(model.Node) error
-	Remove(id string) error
+	GetAll(context.Context) ([]model.Node, error)
+	Get(ctx context.Context, id string) (model.Node, error)
+	AddOrUpdate(context.Context, model.Node) error
+	Remove(ctx context.Context, id string) error
 }
