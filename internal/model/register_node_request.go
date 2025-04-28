@@ -1,10 +1,8 @@
 package model
 
-type Node struct {
-	ID             string
+type RegisterNodeRequest struct {
 	Hostname       string
 	ServiceName    string
-	State          State
 	HealthEndpoint string
 	UpdEndpoint    string
 }

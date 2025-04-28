@@ -11,7 +11,6 @@ import (
 	"github.com/horockey/service_discovery/internal/gateway/nodes_updates"
 	"github.com/horockey/service_discovery/internal/gateway/nodes_updates/http_broadcast_nodes_updates/dto"
 	"github.com/horockey/service_discovery/internal/model"
-	"github.com/horockey/service_discovery/internal/repository/nodes"
 	"github.com/rs/zerolog"
 )
 
@@ -20,7 +19,6 @@ var _ nodes_updates.Gateway = &httpBroadcastNodesUpdates{}
 var ErrClosed = errors.New("gateway is closed. Unable to write new message")
 
 type httpBroadcastNodesUpdates struct {
-	nodesRepo  nodes.Repository
 	mu         sync.RWMutex
 	closed     bool
 	cl         *resty.Client
@@ -35,7 +33,6 @@ type sendTask struct {
 }
 
 func New(
-	nodesRepo nodes.Repository,
 	workersNum int,
 	apiKey string,
 	logger zerolog.Logger,
@@ -45,12 +42,12 @@ func New(
 	}
 
 	return &httpBroadcastNodesUpdates{
-		nodesRepo:  nodesRepo,
 		workersNum: workersNum,
 		logger:     logger,
 		sendCh:     make(chan sendTask, workersNum),
 		cl: resty.New().
 			SetHeader("X-Api-Key", apiKey).
+			SetHeader("Content-Type", "application/json").
 			SetRetryCount(5),
 	}, nil
 }
@@ -64,11 +61,11 @@ func (gw *httpBroadcastNodesUpdates) Start(ctx context.Context) error {
 			defer wg.Done()
 			for task := range gw.sendCh {
 				resp, err := gw.cl.R().
-					SetHeader("Content-Type", "application/json").
+					SetContext(ctx).
 					SetBody(dto.Node{
-						ID:    task.msg.ID,
-						Name:  task.msg.Name,
-						State: task.msg.State.String(),
+						ID:       task.msg.ID,
+						Hostname: task.msg.Hostname,
+						State:    task.msg.State.String(),
 					}).
 					Post(task.endpoint)
 				if err != nil {
@@ -102,19 +99,14 @@ func (gw *httpBroadcastNodesUpdates) Start(ctx context.Context) error {
 	return fmt.Errorf("running context: %w", ctx.Err())
 }
 
-func (gw *httpBroadcastNodesUpdates) Send(ctx context.Context, upd model.Node) error {
-	nodes, err := gw.nodesRepo.GetAll(ctx)
-	if err != nil {
-		return fmt.Errorf("getting list of nodes from repo: %w", err)
-	}
-
+func (gw *httpBroadcastNodesUpdates) Send(ctx context.Context, upd model.Node, recievers []model.Node) error {
 	gw.mu.RLock()
 	defer gw.mu.RUnlock()
 	if gw.closed {
 		return ErrClosed
 	}
 
-	for _, node := range nodes {
+	for _, node := range recievers {
 		if node.ID == upd.ID {
 			continue
 		}

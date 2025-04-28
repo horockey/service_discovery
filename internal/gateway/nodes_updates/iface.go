@@ -7,5 +7,5 @@ import (
 )
 
 type Gateway interface {
-	Send(ctx context.Context, upd model.Node) error
+	Send(ctx context.Context, upd model.Node, recievers []model.Node) error
 }

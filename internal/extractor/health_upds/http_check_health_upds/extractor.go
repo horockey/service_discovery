@@ -9,22 +9,24 @@ import (
 	"github.com/go-resty/resty/v2"
 	"github.com/horockey/service_discovery/internal/extractor/health_upds"
 	"github.com/horockey/service_discovery/internal/model"
-	"github.com/horockey/service_discovery/internal/repository/nodes"
 	"github.com/rs/zerolog"
 )
 
 var _ health_upds.Extractor = &httpCheckHealthUpds{}
 
 type httpCheckHealthUpds struct {
-	nodesRepo     nodes.Repository
+	nodesRepo     ReadOnlyRepo
 	cl            *resty.Client
 	out           chan model.Node
 	checkInterval time.Duration
 	logger        zerolog.Logger
 }
+type ReadOnlyRepo interface {
+	GetAll(ctx context.Context) ([]model.Node, error)
+}
 
 func New(
-	nodesRepo nodes.Repository,
+	nodesRepo ReadOnlyRepo,
 	outChSize int,
 	checkInterval time.Duration,
 	apiKey string,
@@ -73,13 +75,6 @@ func (ex *httpCheckHealthUpds) Start(ctx context.Context) error {
 				continue
 			}
 			for _, upd := range upds {
-				if err := ex.nodesRepo.AddOrUpdate(ctx, upd); err != nil {
-					ex.logger.
-						Error().
-						Err(fmt.Errorf("sending upd to repo: %w", err)).
-						Send()
-					continue
-				}
 				ex.out <- upd
 			}
 		}
@@ -99,7 +94,9 @@ func (ex *httpCheckHealthUpds) getUpds(ctx context.Context) ([]model.Node, error
 	upds := []model.Node{}
 
 	for _, node := range nodes {
-		resp, err := ex.cl.R().Get(node.HealthEndpoint)
+		resp, err := ex.cl.R().
+			SetContext(ctx).
+			Get(node.HealthEndpoint)
 		if err != nil {
 			ex.logger.
 				Error().

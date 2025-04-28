@@ -1,7 +1,8 @@
 package dto
 
 type Node struct {
-	ID    string
-	Name  string
-	State string
+	ID          string
+	Hostname    string
+	ServiceName string
+	State       string
 }

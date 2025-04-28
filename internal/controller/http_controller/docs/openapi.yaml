@@ -49,7 +49,25 @@ paths:
         "500":
           $ref: "#/components/responses/500"
 
-  /node/{node_id}:
+  /node/{serviceName}:
+    get:
+      summary: Получение актуального списка узлов для сервиса.
+      responses:
+        "200":
+          description: Список узлов успешно получен.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Node"
+        "400":
+          $ref: "#/components/responses/400"
+        "403":
+          $ref: "#/components/responses/403"
+        "500":
+          $ref: "#/components/responses/500"
+  /node/{nodeID}:
     delete:
       summary: Дерегистрация узла
       parameters:
@@ -62,10 +80,6 @@ paths:
       responses:
         "200":
           description: Узел успешно удален.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Node"
         "400":
           $ref: "#/components/responses/400"
         "403":
@@ -78,13 +92,17 @@ components:
     NewNodeReq:
       type: object
       required:
-        - Name
+        - Hostname
+        - ServiceName
         - HealthEndpoint
         - UpdEndpoint
       properties:
-        Name:
+        Hostname:
           type: string
           description: Имя узла.
+        ServiceName:
+          type: string
+          description: Имя сервиса.
         HealthEndpoint:
           type: string
           description: URL для проверки состояния здоровья узла.
@@ -97,20 +115,20 @@ components:
       type: object
       required:
         - ID
-        - Name
+        - Hostname
+        - ServiceName
         - IpAddr
         - State
       properties:
         ID:
           type: string
           description: Уникальный идентификатор узла.
-        Name:
+        Hostname:
           type: string
           description: Имя узла.
-        IpAddr:
+        ServiceName:
           type: string
-          format: ipv4
-          description: IP-адрес узла.
+          description: Имя сервиса.
         State:
           type: string
           enum: [down, wfr, up]
