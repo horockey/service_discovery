@@ -52,9 +52,6 @@ func New(
 }
 
 func (ex *httpCheckHealthUpds) Start(ctx context.Context) error {
-	trig := make(chan time.Time, 1)
-	trig <- time.Now()
-
 	ticker := time.NewTicker(ex.checkInterval)
 	defer ticker.Stop()
 
@@ -63,9 +60,7 @@ func (ex *httpCheckHealthUpds) Start(ctx context.Context) error {
 		case <-ctx.Done():
 			close(ex.out)
 			return fmt.Errorf("running context: %w", ctx.Err())
-		case now := <-ticker.C:
-			trig <- now
-		case <-trig:
+		case <-ticker.C:
 			upds, err := ex.getUpds(ctx)
 			if err != nil {
 				ex.logger.

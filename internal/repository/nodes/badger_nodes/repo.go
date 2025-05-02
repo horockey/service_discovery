@@ -93,7 +93,7 @@ func (repo *badgerNodes) AddOrUpdate(_ context.Context, n model.Node) error {
 			case errors.Is(ctx.Err(), context.Canceled):
 				return
 			case errors.Is(ctx.Err(), context.DeadlineExceeded):
-				_ = repo.Remove(nil, id)
+				_ = repo.remove(id)
 			}
 		}(n.ID)
 	case model.StateUp:
@@ -111,7 +111,36 @@ func (repo *badgerNodes) AddOrUpdate(_ context.Context, n model.Node) error {
 	return nil
 }
 
-func (repo *badgerNodes) Remove(_ context.Context, id string) error {
+func (repo *badgerNodes) SetDown(ctx context.Context, id string) error {
+	n := model.Node{}
+	if err := repo.db.View(func(txn *badger.Txn) error {
+		item, err := txn.Get([]byte(id))
+		if err != nil {
+			return fmt.Errorf("reading key: %w", err)
+		}
+
+		var data []byte
+		_ = item.Value(func(val []byte) error { data = val; return nil })
+
+		if err := json.Unmarshal(data, &n); err != nil {
+			return fmt.Errorf("unmarshalling data json: %w", err)
+		}
+
+		return nil
+	}); err != nil {
+		return fmt.Errorf("checking key exsistance in db")
+	}
+
+	n.State = model.StateDown
+
+	if err := repo.AddOrUpdate(ctx, n); err != nil {
+		return fmt.Errorf("updating state to down: %w", err)
+	}
+
+	return nil
+}
+
+func (repo *badgerNodes) remove(id string) error {
 	err := repo.db.Update(func(txn *badger.Txn) error {
 		if err := txn.Delete([]byte(id)); err != nil {
 			return fmt.Errorf("removing kvp: %w", err)

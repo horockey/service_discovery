@@ -27,7 +27,7 @@ func main() {
 		TimeFormat: time.RFC3339,
 	}).With().Timestamp().Logger()
 
-	cfg, err := config.New()
+	cfg, err := config.New(logger)
 	if err != nil {
 		logger.
 			Fatal().
@@ -92,6 +92,7 @@ func main() {
 	ctrl := http_controller.New(
 		cfg.BaseURL,
 		uc,
+		cfg.APIKey,
 		logger.With().Str("scope", "http_controller").Logger(),
 	)
 
@@ -122,7 +123,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := updsExtr.Start(ctx); err != nil {
+		if err := updsExtr.Start(ctx); err != nil && !errors.Is(err, context.Canceled) {
 			logger.
 				Error().
 				Err(fmt.Errorf("running updates extractor: %w", err)).
@@ -134,7 +135,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := uc.Start(ctx); err != nil {
+		if err := uc.Start(ctx); err != nil && !errors.Is(err, context.Canceled) {
 			logger.
 				Error().
 				Err(fmt.Errorf("running usecase: %w", err)).
@@ -146,7 +147,7 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		if err := ctrl.Start(ctx); err != nil {
+		if err := ctrl.Start(ctx); err != nil && !errors.Is(err, context.Canceled) {
 			logger.
 				Error().
 				Err(fmt.Errorf("running http controller: %w", err)).

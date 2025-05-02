@@ -28,11 +28,13 @@ type httpController struct {
 func New(
 	addr string,
 	uc *discovery.Usecase,
+	apiKey string,
 	logger zerolog.Logger,
 ) *httpController {
 	ctrl := httpController{
 		uc:     uc,
 		logger: logger,
+		apiKey: apiKey,
 		serv:   &http.Server{Addr: addr},
 	}
 
@@ -83,12 +85,15 @@ func (ctrl *httpController) authMiddleware(next http.Handler) http.Handler {
 			err := fmt.Errorf("bad api key %s", ak)
 			ctrl.logger.Error().Err(err).Send()
 			_ = http_helpers.RespondWithErr(w, http.StatusForbidden, err)
+			return
 		}
+
+		next.ServeHTTP(w, req)
 	})
 }
 
 func (ctrl *httpController) handleDeleteNodeId(w http.ResponseWriter, req *http.Request) {
-	nodeID, found := mux.Vars(req)["serviceName"]
+	nodeID, found := mux.Vars(req)["nodeID"]
 	if !found {
 		err := errors.New("missing nodeID")
 		ctrl.logger.
@@ -136,7 +141,7 @@ func (ctrl *httpController) handlePostNode(w http.ResponseWriter, req *http.Requ
 		return
 	}
 
-	_ = http_helpers.RespondOK(w, node)
+	_ = http_helpers.RespondOK(w, dto.NewNode(node))
 }
 
 func (ctrl *httpController) handleGetNode(w http.ResponseWriter, req *http.Request) {

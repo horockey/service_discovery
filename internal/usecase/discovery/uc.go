@@ -42,6 +42,12 @@ func (uc *Usecase) Start(ctx context.Context) error {
 			return fmt.Errorf("running context: %w", ctx.Err())
 
 		case upd := <-uc.upds.Out():
+			uc.logger.Debug().
+				Str("ID", upd.ID).
+				Str("hostname", upd.Hostname).
+				Str("state", upd.State.String()).
+				Msg("Get node upd")
+
 			if err := uc.nodesRepo.AddOrUpdate(ctx, upd); err != nil && !errors.Is(err, context.Canceled) {
 				uc.logger.
 					Error().
@@ -95,7 +101,7 @@ func (uc *Usecase) Register(ctx context.Context, req model.RegisterNodeRequest) 
 }
 
 func (uc *Usecase) Deregister(ctx context.Context, id string) error {
-	if err := uc.nodesRepo.Remove(ctx, id); err != nil {
+	if err := uc.nodesRepo.SetDown(ctx, id); err != nil {
 		return fmt.Errorf("removing node from repo: %w", err)
 	}
 

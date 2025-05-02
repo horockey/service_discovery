@@ -25,3 +25,5 @@ go.work.sum
 .env
 
 .vscode/
+badger/
+mock_agent/
