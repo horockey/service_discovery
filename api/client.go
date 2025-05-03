@@ -27,14 +27,20 @@ type Client struct {
 	serviceName string
 	logger      zerolog.Logger
 	out         chan Node
+
+	serv *http.Server
 }
 
 func NewClient(
 	serviceName string,
 	baseURL string,
 	apiKey string,
+	serv *http.Server,
 	logger zerolog.Logger,
-) *Client {
+) (*Client, error) {
+	if serv == nil {
+		return nil, errors.New("got nil serv")
+	}
 	return &Client{
 		serviceName: serviceName,
 		logger:      logger,
@@ -42,25 +48,22 @@ func NewClient(
 			SetBaseURL(baseURL).
 			SetHeader("X-Api-Key", apiKey).
 			SetRetryCount(3),
-	}
+		serv: serv,
+	}, nil
 }
 
 func (cl *Client) Register(
 	ctx context.Context,
 	hostname string,
-	serv *http.Server,
 	updCb func(Node) error,
 ) error {
-	if serv == nil {
-		return errors.New("got nil serv")
-	}
 	if updCb == nil {
 		return errors.New("got nil callback")
 	}
 
 	router := mux.NewRouter()
-	if serv.Handler != nil {
-		router.NotFoundHandler = serv.Handler
+	if cl.serv.Handler != nil {
+		router.NotFoundHandler = cl.serv.Handler
 	}
 
 	router.HandleFunc(healthEndpoint, func(w http.ResponseWriter, r *http.Request) {
@@ -87,7 +90,7 @@ func (cl *Client) Register(
 		}
 	}).Methods(http.MethodPost)
 
-	serv.Handler = router
+	cl.serv.Handler = router
 
 	resp, err := cl.cl.R().
 		SetContext(ctx).
