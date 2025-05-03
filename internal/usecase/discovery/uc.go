@@ -114,6 +114,8 @@ func (uc *Usecase) GetAll(ctx context.Context, serviceName string) ([]model.Node
 		return nil, fmt.Errorf("getting node from")
 	}
 
+	nodes = lo.Uniq(nodes)
+
 	return lo.Filter(
 			nodes,
 			func(el model.Node, _ int) bool {
