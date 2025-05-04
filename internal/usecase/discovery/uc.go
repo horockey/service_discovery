@@ -91,6 +91,7 @@ func (uc *Usecase) Register(ctx context.Context, req model.RegisterNodeRequest) 
 		HealthEndpoint: req.HealthEndpoint,
 		UpdEndpoint:    req.UpdEndpoint,
 		State:          model.StateUp,
+		Meta:           req.Meta,
 	}
 
 	if err := uc.nodesRepo.AddOrUpdate(ctx, n); err != nil {
@@ -114,7 +115,10 @@ func (uc *Usecase) GetAll(ctx context.Context, serviceName string) ([]model.Node
 		return nil, fmt.Errorf("getting node from")
 	}
 
-	nodes = lo.Uniq(nodes)
+	nodes = lo.UniqBy(
+		nodes,
+		func(el model.Node) string { return el.ID },
+	)
 
 	return lo.Filter(
 			nodes,

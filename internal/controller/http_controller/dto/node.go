@@ -7,6 +7,7 @@ type Node struct {
 	Hostname    string
 	ServiceName string
 	State       string
+	Meta        map[string]string
 }
 
 func NewNode(n model.Node) Node {
@@ -15,5 +16,6 @@ func NewNode(n model.Node) Node {
 		Hostname:    n.Hostname,
 		ServiceName: n.ServiceName,
 		State:       n.State.String(),
+		Meta:        n.Meta,
 	}
 }
