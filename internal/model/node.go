@@ -7,4 +7,5 @@ type Node struct {
 	State          State
 	HealthEndpoint string
 	UpdEndpoint    string
+	Meta           map[string]string
 }

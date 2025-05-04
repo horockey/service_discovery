@@ -5,4 +5,5 @@ type RegisterNodeRequest struct {
 	ServiceName    string
 	HealthEndpoint string
 	UpdEndpoint    string
+	Meta           map[string]string
 }

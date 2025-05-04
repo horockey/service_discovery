@@ -111,6 +111,8 @@ components:
           type: string
           minLength: 1
           description: URL для отсылки узлу обновлений состояния кластера.
+        Meta:
+          type: object
     Node:
       type: object
       required:
@@ -119,6 +121,7 @@ components:
         - ServiceName
         - IpAddr
         - State
+        - Meta
       properties:
         ID:
           type: string
@@ -133,6 +136,8 @@ components:
           type: string
           enum: [down, wfr, up]
           description: Состояние узла.
+        Meta:
+          type: object
 
     ErrorResponse:
       type: object
