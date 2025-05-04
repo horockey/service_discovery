@@ -56,6 +56,7 @@ func (cl *Client) Register(
 	ctx context.Context,
 	hostname string,
 	updCb func(Node) error,
+	meta map[string]string,
 ) error {
 	if updCb == nil {
 		return errors.New("got nil callback")
@@ -99,6 +100,7 @@ func (cl *Client) Register(
 			ServiceName:    cl.serviceName,
 			HealthEndpoint: fmt.Sprintf("http://%s%s", hostname, healthEndpoint),
 			UpdEndpoint:    fmt.Sprintf("http://%s%s", hostname, updEndpoint),
+			Meta:           meta,
 		}).
 		Post("/node")
 	if err != nil {
