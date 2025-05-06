@@ -26,7 +26,6 @@ type Client struct {
 	cl          *resty.Client
 	serviceName string
 	logger      zerolog.Logger
-	out         chan Node
 
 	serv *http.Server
 }
