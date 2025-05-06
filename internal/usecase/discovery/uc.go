@@ -90,7 +90,7 @@ func (uc *Usecase) Register(ctx context.Context, req model.RegisterNodeRequest) 
 		ServiceName:    req.ServiceName,
 		HealthEndpoint: req.HealthEndpoint,
 		UpdEndpoint:    req.UpdEndpoint,
-		State:          model.StateUp,
+		State:          model.StateDown,
 		Meta:           req.Meta,
 	}
 
@@ -123,7 +123,7 @@ func (uc *Usecase) GetAll(ctx context.Context, serviceName string) ([]model.Node
 	return lo.Filter(
 			nodes,
 			func(el model.Node, _ int) bool {
-				return el.ServiceName == serviceName
+				return el.ServiceName == serviceName || serviceName == ""
 			},
 		),
 		nil

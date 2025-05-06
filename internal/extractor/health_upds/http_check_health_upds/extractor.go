@@ -89,9 +89,11 @@ func (ex *httpCheckHealthUpds) getUpds(ctx context.Context) ([]model.Node, error
 	upds := []model.Node{}
 
 	for _, node := range nodes {
+		callCtx, cancel := context.WithTimeout(ctx, time.Second*3)
 		resp, err := ex.cl.R().
-			SetContext(ctx).
+			SetContext(callCtx).
 			Get(node.HealthEndpoint)
+		cancel()
 		if err != nil {
 			ex.logger.
 				Error().

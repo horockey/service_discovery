@@ -24,7 +24,7 @@ func New(logger zerolog.Logger) (*Config, error) {
 		BadgerDir:          "./badger",
 		DownNodesRmIvlMSec: 3_000,
 		HealthcheckIvlMsec: 1_000,
-		BaseURL:            "localhost:7000",
+		BaseURL:            "0.0.0.0:6500",
 	}
 
 	if err := godotenv.Load(); err != nil {

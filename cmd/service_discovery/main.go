@@ -58,7 +58,6 @@ func main() {
 
 	updsGw, err := http_broadcast_nodes_updates.New(
 		runtime.NumCPU(),
-		cfg.APIKey,
 		logger.With().Str("scope", "http_updates_gateway").Logger(),
 	)
 	if err != nil {

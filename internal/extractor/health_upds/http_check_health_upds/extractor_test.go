@@ -53,10 +53,10 @@ func TestExtractor(t *testing.T) {
 		}
 	)
 
-	node1Up := *(&node1Down)
+	node1Up := node1Down
 	node1Up.State = model.StateUp
 
-	node2Down := *(&node2Up)
+	node2Down := node2Up
 	node2Down.State = model.StateDown
 
 	actualStates := []model.Node{node1Down, node2Up}

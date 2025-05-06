@@ -34,7 +34,6 @@ type sendTask struct {
 
 func New(
 	workersNum int,
-	apiKey string,
 	logger zerolog.Logger,
 ) (*httpBroadcastNodesUpdates, error) {
 	if workersNum <= 0 {
@@ -46,7 +45,6 @@ func New(
 		logger:     logger,
 		sendCh:     make(chan sendTask, workersNum),
 		cl: resty.New().
-			SetHeader("X-Api-Key", apiKey).
 			SetHeader("Content-Type", "application/json").
 			SetRetryCount(5),
 	}, nil
