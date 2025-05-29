@@ -1,0 +1,36 @@
+@startuml seq
+participant Discovery
+entity Node
+entity OtherNodes
+
+==Регистрация узла==
+Node --> Discovery: Регистрация узла
+Discovery --> Discovery: Регистрация узлa,\nstate = DOWN
+Discovery --> Discovery: Начало цикла\nпроверки здоровья
+Node <-- Discovery: Ответ
+
+==Дерегистрация узла==
+Node --> Discovery: Дерегистрация узла
+Discovery --> Discovery: Дерегистрация узла
+Discovery --> OtherNodes: Node теперь недоступен
+
+==Цикл проверки здоровья==
+Discovery --> Node: Проверка здоровья
+Discovery <-- Node: Ответ
+
+alt #LightGreen Node доступен, а был недоступен
+    Discovery --> OtherNodes: Node теперь доступен
+end
+
+alt #Pink Node недоступен, а был доступен
+    Discovery --> OtherNodes: Node теперь недоступен
+end
+
+alt В фоне
+Discovery --> Node: Проверки продолжаются\nеще какое-то время
+alt Node все еще недоступен
+    Discovery --> Discovery: Принудительно дерегистрировать Node
+end
+end
+
+@enduml

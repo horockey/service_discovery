@@ -6,11 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"slices"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/gorilla/mux"
 	"github.com/horockey/go-toolbox/http_helpers"
 	controller_dto "github.com/horockey/service_discovery/internal/controller/http_controller/dto"
+	"github.com/horockey/service_discovery/internal/model"
 	"github.com/rs/zerolog"
 )
 
@@ -26,6 +29,8 @@ type Client struct {
 	cl          *resty.Client
 	serviceName string
 	logger      zerolog.Logger
+
+	done chan struct{}
 
 	serv *http.Server
 }
@@ -48,6 +53,7 @@ func NewClient(
 			SetHeader("X-Api-Key", apiKey).
 			SetRetryCount(3),
 		serv: serv,
+		done: make(chan struct{}),
 	}, nil
 }
 
@@ -116,6 +122,39 @@ func (cl *Client) Register(
 
 	cl.nodeID = node.ID
 
+	go func() {
+		ticker := time.NewTicker(time.Millisecond * 500)
+		defer ticker.Stop()
+		nodes, _ := cl.GetNodes(ctx)
+
+		for {
+			select {
+			case <-cl.done:
+				return
+			case <-ticker.C:
+				newNodes, _ := cl.GetNodes(ctx)
+
+				for _, node := range nodes {
+					if !slices.ContainsFunc(newNodes, func(el Node) bool { return el.ID == node.ID }) {
+						// downed
+						node.State = model.StateDown.String()
+						_ = updCb(node)
+					}
+				}
+
+				for _, node := range newNodes {
+					if !slices.ContainsFunc(nodes, func(el Node) bool { return el.ID == node.ID }) {
+						// upped
+						node.State = model.StateUp.String()
+						_ = updCb(node)
+					}
+				}
+
+				nodes = newNodes
+			}
+		}
+	}()
+
 	return nil
 }
 
@@ -130,6 +169,8 @@ func (cl *Client) Deregister(ctx context.Context) error {
 	if resp.StatusCode() != http.StatusOK {
 		return fmt.Errorf("got non-ok response (%s): %s", resp.Status(), resp.String())
 	}
+
+	close(cl.done)
 
 	return nil
 }
