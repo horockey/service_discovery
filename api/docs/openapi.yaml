@@ -1,0 +1,65 @@
+openapi: 3.0.1
+info:
+  title: Node Service API
+  description: API для управления информацией о нодах
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Локальный сервер разработки
+
+paths:
+  /health:
+    get:
+      summary: Проверка состояния сервиса
+      description: Возвращает статус 200, если сервис работает
+      responses:
+        "200":
+          description: Сервис работает
+
+  /updateMe:
+    post:
+      summary: Обновление информации о ноде
+      description: Принимает данные о ноде в формате JSON и обновляет их
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Node"
+      responses:
+        "200":
+          description: Данные успешно обновлены
+        "400":
+          description: Неверный формат запроса
+        "500":
+          description: Внутренняя ошибка сервера
+
+components:
+  schemas:
+    Node:
+      type: object
+      required:
+        - ID
+        - Hostname
+        - ServiceName
+        - State
+      properties:
+        ID:
+          type: string
+          description: Уникальный идентификатор ноды
+        Hostname:
+          type: string
+          description: Имя хоста ноды
+        ServiceName:
+          type: string
+          description: Название сервиса
+        State:
+          type: string
+          description: Текущее состояние ноды
+        Meta:
+          type: object
+          additionalProperties:
+            type: string
+          description: Дополнительные метаданные в виде ключ-значение
+          example: { "key1": "value1", "key2": "value2" }
